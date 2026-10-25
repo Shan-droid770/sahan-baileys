@@ -192,6 +192,12 @@ describe('location / gif headers', () => {
         assert.ok(Math.abs(bm.locationMessage.degreesLongitude - 76.2673) < 1e-6)
     })
 
+    test('ordinary gif media is normalized to looping VideoMessage payload (source contract)', async () => {
+        const src = await readFile(new URL('../lib/Utils/messages.js', import.meta.url), 'utf8');
+        assert.match(src, /const isGif = Object\.prototype\.hasOwnProperty\.call\(message, 'gif'\)/);
+        assert.match(src, /message = \{ \.\.\.message, video: message\.gif, gifPlayback: true \}/);
+    });
+
     test('gif key maps to a VIDEO header with gifPlayback (source contract)', () => {
         // exercising the real gif branch would fetch the remote stream before the
         // mocked upload — verify the mapping contract in source instead:
