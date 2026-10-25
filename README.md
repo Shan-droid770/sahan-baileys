@@ -1,19 +1,19 @@
 <div align="center">
-<img src="https://capsule-render.vercel.app/api?type=waving&height=220&color=0:ff6b6b,40:f06595,100:845ef7&text=ishumdz-bail&fontAlignY=40&fontSize=44&fontColor=ffffff&desc=Stable%20WhatsApp%20Web%20API%20Fork%20for%20Production%20Bots&descAlignY=60&descSize=16" alt="Header Banner" />
+<img src="https://capsule-render.vercel.app/api?type=waving&height=220&color=0:ff6b6b,40:f06595,100:845ef7&text=sahan-baileys&fontAlignY=40&fontSize=44&fontColor=ffffff&desc=Stable%20WhatsApp%20Web%20API%20Fork%20for%20Production%20Bots&descAlignY=60&descSize=16" alt="Header Banner" />
 
 <br/>
 
 <!-- Rounded + border image -->
-<a href="https://ishanx-pro.site.je">
+<a href="https://sahan-ofc-hub.vercel.app">
   <kbd>
-    <img src="https://i.postimg.cc/9Q6q2Pv6/IMG-20260925-WA4965.jpg" alt="WhatsApp Baileys 2026" width="720" />
+    <img src="https://h.uguu.se/zNSVikNH.jpg" alt="WhatsApp Baileys 2026" width="720" />
   </kbd>
 </a>
 
 <br/><br/>
 
 
-# 🧑‍💻 ishumdz-bail
+# 🧑‍💻 sahan-baileys
 
 <p>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
@@ -24,8 +24,8 @@
 </p>
 
 <p>
-  <img src="https://img.shields.io/npm/v/ishumdz-bail?style=flat-square&color=25D366&label=npm" />
-  <img src="https://img.shields.io/badge/maintained%20by-Lovely-black?style=flat-square" />
+  <img src="https://img.shields.io/github/v/sahan-baileys?style=flat-square&color=25D366&label=npm" />
+  <img src="https://img.shields.io/badge/maintained%20by-Sahan-black?style=flat-square" />
 </p>
 
 **Open-source WhatsApp automation library — no browser required.**
@@ -33,15 +33,15 @@ Built on WebSocket for speed, stability, and full multi-device support.
 
 <br/>
 
-[Installation](#-getting-started) • [Features](#-main-features) • [Stability](#-stability--disconnect-handling) • [Website](https://ishanx-pro.site.je) • [WhatsApp Channel](https://shyracore.indevs.in)
+[Installation](#-getting-started) • [Features](#-main-features) • [Stability](#-stability--disconnect-handling) • [Website](https://sahan-ofc-hub.vercel.app) • [WhatsApp Channel](https://whatsapp.com/channel/0029VbDAxUKJpe8fTZfJwl0x)
 
 </div>
 
 ---
 
-## ✨ What is ishumdz-bail?
+## ✨ What is sahan-baileys?
 
-**ishumdz-bail** (`ishumdz-bail`) is a powerful, open-source WhatsApp Web library built on top of the Baileys protocol stack — extended with features not found in any other public fork. It connects directly to WhatsApp's multi-device WebSocket protocol. No Selenium, no Puppeteer, no browser overhead.
+**sahan-baileys** (`sahan-baileys`) is a powerful, open-source WhatsApp Web library built on top of the Baileys protocol stack — extended with features not found in any other public fork. It connects directly to WhatsApp's multi-device WebSocket protocol. No Selenium, no Puppeteer, no browser overhead.
 
 > ⚡ **Node.js ≥ 20 required.**
 
@@ -50,11 +50,11 @@ Built on WebSocket for speed, stability, and full multi-device support.
 ## 🚀 Getting Started
 
 ```bash
-npm install ishumdz-bail
+npm install github:sahan-baileys
 ```
 
 ```javascript
-import { makeWASocket, useMultiFileAuthState } from 'ishumdz-bail'
+import { makeWASocket, useMultiFileAuthState } from 'sahan-baileys'
 
 const { state, saveCreds } = await useMultiFileAuthState('auth_info')
 const sock = makeWASocket({
@@ -299,7 +299,7 @@ await sock.removeProfilePicture(jid);
 8 fun games for your WhatsApp bot:
 
 ```javascript
-const { blackjack, slotMachine, diceGame, coinFlip, roulette, rps, trivia, createMines } = require('ishumdz-bail');
+const { blackjack, slotMachine, diceGame, coinFlip, roulette, rps, trivia, createMines } = require('sahan-baileys');
 
 // Blackjack
 const game = blackjack('start', [], [], 100); // Start with 100 bet
@@ -345,7 +345,7 @@ Send messages that render as Meta AI-style bubbles inside WhatsApp. Supports mul
 // Markdown text
 await sock.sendMessage(jid, {
     richResponse: {
-        text: '**Hello** from *ishumdz-bail*',
+        text: '**Hello** from *sahan-baileys*',
         responseId: 'optional-uuid'
     }
 })
@@ -463,8 +463,8 @@ All of them mix freely in one message and render as a single horizontal row
 ```javascript
 await sock.sendMessage(jid, {
     location: { degreesLatitude: 9.9312, degreesLongitude: 76.2673 }, // simple map card
-    text: 'Pong 9 Ms ⚡\nDeveloper: ISHAN-X × LOVELY',
-    footer: 'ISHAN-X MD PRO',
+    text: 'Pong 9 Ms ⚡\nDeveloper: SAHAN OFC',
+    footer: 'POWERED BY SAHAN OFC',
     buttons: [
         { buttonText: { displayText: 'menu' },  buttonId: 'menu',  type: 1 },
         { buttonText: { displayText: 'owner' }, buttonId: 'owner', type: 1 }
@@ -509,7 +509,7 @@ await sock.sendMessage(jid, {
     location: {
         degreesLatitude: 9.9312,
         degreesLongitude: 76.2673,
-        name: 'ISHAN-X MD PRO',           // bold title under the map
+        name: 'SAHAN MD',           // bold title under the map
         address: 'Select an option below', // 📍 subtitle
         // jpegThumbnail: buffer — custom map image (optional)
     },
@@ -528,7 +528,7 @@ titles, a `highlight_label` badge and row descriptions:
 await sock.sendMessage(jid, {
     image: { url: './banner.jpg' },       // or gif / location / video header
     caption: 'Pong 9 Ms ⚡',
-    footer: 'ISHAN-X MD PRO',
+    footer: 'SAHAN MD',
     buttons: [
         { buttonText: { displayText: '☰ menu' },  buttonId: 'menu',  type: 1 },
         { buttonText: { displayText: '🔍 owner' }, buttonId: 'owner', type: 1 },
@@ -580,7 +580,7 @@ await sock.sendMessage(jid, {
         // 📢 one tap → channel/page opens:
         { buttonText: { displayText: '📢 Channel' }, url: 'https://whatsapp.com/channel/0029V...' },
         // 🎁 one tap → code copies to clipboard:
-        { buttonText: { displayText: '🎁 Voucher' }, copy: 'ISHAN2026' },
+        { buttonText: { displayText: '🎁 Voucher' }, copy: 'SAHAN2026' },
         // 📞 one tap → dialer opens:
         { buttonText: { displayText: '📞 Call Owner' }, call: '919999999999' },
         // a tap-to-open sheet button can share the same message:
@@ -605,7 +605,7 @@ await sock.sendMessage(jid, {
 // text-only: TEXT headerType — some clients still show the row vertically;
 // for a guaranteed horizontal row attach image/gif/location as above.
 await sock.sendMessage(jid, {
-    text: 'Pong 9 Ms ⚡', footer: 'ISHAN-X',
+    text: 'Pong 9 Ms ⚡', footer: 'POWERED BY SAHAN OFC',
     buttons: [ { buttonText: { displayText: 'menu' }, buttonId: 'menu', type: 1 } ]
 })
 
@@ -626,11 +626,11 @@ await sock.sendMessage(jid, {
     location: {
         degreesLatitude: 9.9312,
         degreesLongitude: 76.2673,
-        name: 'ISHAN-X MD PRO',
+        name: 'SAHAN MD',
         address: 'Select an option below'
     },
-    text: 'Pong 9 Ms ⚡\nDeveloper: ISHAN-X × LOVELY',
-    footer: 'ISHAN-X MD PRO',
+    text: 'Pong 9 Ms ⚡\nDeveloper: SAHAN OFC',
+    footer: 'SAHAN MD',
     buttons: [
         // 1) plain quick-reply → sends 'menu' back to your bot
         { buttonText: { displayText: '☰ menu' }, buttonId: 'menu', type: 1 },
@@ -1606,13 +1606,13 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
 <table>
 <tr>
 <td align="center">
-<a href="https://ishanx-pro.site.je">
-🌐<br/><b>Website</b><br/>ishanx-pro.site.je
+<a href="https:/sahan-ofc-hub.vercel.app">
+🌐<br/><b>Website</b><br/>SAHAN-OFC-SITE
 </a>
 </td>
 <td align="center">
-<a href="https://shyracore.indevs.in">
-💬<br/><b>WhatsApp Channel</b><br/>shyracore.indevs.in
+<a href="https://whatsapp.com/channel/0029VbDAxUKJpe8fTZfJwl0x">
+💬<br/><b>WhatsApp Channel</b><br/>sahan-ofc-channel
 </a>
 </td>
 </tr>
@@ -1628,7 +1628,7 @@ sock.ev.on('messages.upsert', async ({ messages }) => {
 
 ### ⭐ If this project helped you, consider giving it a star!
 
-Made with ❤️ by **Lovely**
+Modifieded with ❤️ by **Sahan**
 
 </div>
 
@@ -1654,7 +1654,7 @@ as a dependency — hosts that block git fetches refuse to install it.
 npm registry (`libsignal-node`), no git fetch needed:
 
 ```bash
-npm install ishumdz-bail@latest
+npm install github:sahan-baileys
 ```
 
 If you must stay on an older version and your host allows it, enable git fetching:
@@ -1676,7 +1676,7 @@ npm install dotenv
 
 ### ✅ Deploy checklist for restricted hosts
 
-1. `ishumdz-bail` **v1.0.20+** in `package.json` (no git deps inside)
+1. `sahan-baileys` **v1.0.20+** in `package.json` (no git deps inside)
 2. `dotenv` (and every other module your bot requires) listed in your **bot's** `package.json`
 3. Run `npm install` from the bot folder (not global), then `npm start`
 4. If the host still blocks git deps, check `npm ls` output for any `github:` entries
