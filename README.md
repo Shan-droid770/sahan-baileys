@@ -50,7 +50,7 @@ Built on WebSocket for speed, stability, and full multi-device support.
 ## 🚀 Getting Started
 
 ```bash
-npm install github:sahan-baileys
+npm install sahan-baileys
 ```
 
 ```javascript
@@ -1654,7 +1654,7 @@ as a dependency — hosts that block git fetches refuse to install it.
 npm registry (`libsignal-node`), no git fetch needed:
 
 ```bash
-npm install github:sahan-baileys
+npm install sahan-baileys
 ```
 
 If you must stay on an older version and your host allows it, enable git fetching:

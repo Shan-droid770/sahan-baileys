@@ -16,19 +16,27 @@
         "lovely",
         "wa-bot"
     ],
-    "homepage": "https://sahan-ofc-hub.vercel.app",
+    "homepage": "https://github.com/Shan-droid770/sahan-baileys#readme",
     "repository": {
-        "url": "https:/github.com/Shan-droid770/sahan-baileys"
+        "type": "git",
+        "url": "https://github.com/Shan-droid770/sahan-baileys.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Shan-droid770/sahan-baileys/issues"
+    },
+    "publishConfig": {
+        "access": "public"
     },
     "license": "MIT",
     "author": "Sahan Ofc",
     "main": "lib/index.js",
-    "types": "lib/index.d.ts",
     "files": [
         "lib/**/*",
         "WAProto/*.js",
         "WAProto/*.d.ts",
-        "engine-requirements.js"
+        "engine-requirements.js",
+        "README.md",
+        "LICENSE"
     ],
     "scripts": {
         "build:all": "tsc && typedoc",
@@ -39,7 +47,7 @@
         "gen:protobuf": "sh WAProto/GenerateStatics.sh",
         "lint": "eslint src --ext .js,.ts,.jsx,.tsx",
         "lint:fix": "eslint src --fix --ext .js,.ts,.jsx,.tsx",
-        "prepack": "",
+        "prepack": "node -e \"const fs=require('node:fs'); for (const p of ['lib/index.js','WAProto/index.js']) if (!fs.existsSync(p)) throw new Error('Missing publish file: '+p)\"",
         "prepare": "",
         "preinstall": "node ./engine-requirements.js",
         "release": "release-it",
