@@ -1,5 +1,5 @@
 {
-    "name": "ishumdz-bail",
+    "name": "sahan-baileys",
     "version": "1.0.32",
     "description": "WhatsApp API Modification By Lovely",
     "keywords": [
@@ -16,12 +16,12 @@
         "lovely",
         "wa-bot"
     ],
-    "homepage": "https://ishanx-pro.site.je",
+    "homepage": "https://sahan-ofc-hub.vercel.app",
     "repository": {
-        "url": "https://www.npmjs.com/package/ishumdz-bail"
+        "url": "https:/github.com/Shan-droid770/sahan-baileys"
     },
     "license": "MIT",
-    "author": "Lovely",
+    "author": "Sahan Ofc",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "files": [
