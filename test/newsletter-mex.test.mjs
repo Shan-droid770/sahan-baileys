@@ -13,6 +13,7 @@
  */
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
+import * as zlib from 'node:zlib'
 import { deflateRawSync, gzipSync } from 'node:zlib'
 import { readFileSync } from 'node:fs'
 
@@ -23,6 +24,7 @@ import {
     extractNewsletterMetadata,
     filterNewsletterAdminChannels,
     resolveNewsletterAdminChannels,
+    normalizeNewsletterMetadataArgs,
     parseNewsletterMetadata,
     parseNewsletterSubscriptions
 } from '../lib/Socket/newsletter.js'
@@ -79,7 +81,26 @@ const okQuery = json => async () => ({
 const run = (payload, dataPath = XWAPaths.xwa2_newsletter_metadata, queryId = QueryIds.METADATA, overrides) =>
     executeWMexQuery({}, queryId, dataPath, okQuery(payload), () => 'MSG-1', overrides)
 
+describe('newsletter metadata argument compatibility', () => {
+    test('supports a single jid/invite reference as well as the explicit type/key form', () => {
+        assert.deepEqual(normalizeNewsletterMetadataArgs('120363401821263628@newsletter'), {
+            type: 'jid', key: '120363401821263628@newsletter'
+        })
+        assert.deepEqual(normalizeNewsletterMetadataArgs('invite', 'AbCdEf'), { type: 'invite', key: 'AbCdEf' })
+        assert.deepEqual(normalizeNewsletterMetadataArgs('https://whatsapp.com/channel/AbCdEf'), {
+            type: 'invite', key: 'AbCdEf'
+        })
+    })
+})
+
 describe('w:mex layer', () => {
+    test('decodes Zstandard JSON bodies when the runtime supports it', { skip: typeof zlib.zstdCompressSync !== 'function' }, () => {
+        const payload = { data: { result: 'ok', labels: ['one', 'two'] } }
+        const decoded = decodeWMexResponse(zlib.zstdCompressSync(Buffer.from(JSON.stringify(payload))), '123')
+        assert.deepEqual(decoded.data, payload)
+        assert.equal(decoded.format, 'zstd')
+    })
+
     test('decodes raw-DEFLATE JSON bodies with a bounded output buffer', () => {
         const payload = { data: { result: 'ok' } }
         const decoded = decodeWMexResponse(deflateRawSync(Buffer.from(JSON.stringify(payload))), '123')
