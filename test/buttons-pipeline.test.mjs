@@ -206,11 +206,24 @@ describe('carousel message support', () => {
             display_text: 'Open source', url: 'https://example.com', merchant_url: 'https://example.com', webview_interaction: true
         });
         assert.equal(interactive.header, undefined, 'carousel follows the working protocol shape without a synthetic parent header');
+
+        // Exercise the actual WA protobuf encoder/decoder, not just object construction.
+        assert.equal(proto.Message.verify(m), null);
+        const encoded = proto.Message.encode(m).finish();
+        const decoded = proto.Message.decode(encoded);
+        assert.equal(decoded.interactiveMessage.carouselMessage.cards.length, 2);
+        assert.deepEqual(
+            decoded.interactiveMessage.carouselMessage.cards[0].header.imageMessage.mediaKey,
+            interactive.carouselMessage.cards[0].header.imageMessage.mediaKey
+        );
+        assert.equal(decoded.interactiveMessage.carouselMessage.cards[1].nativeFlowMessage.buttons[0].name, 'cta_url');
     });
 
-    test('carousel validates card count', async () => {
+    test('carousel rejects invalid counts, card values, and empty cards', async () => {
         const options = await okOptions();
         await assert.rejects(() => gen({ cards: [{ text: 'only one' }] }, options), /between 2 and 10 cards/);
+        await assert.rejects(() => gen({ cards: [{ text: 'valid' }, null] }, options), /must be an object/);
+        await assert.rejects(() => gen({ cards: [{}, {}] }, options), /must contain media, text, or buttons/);
     });
 });
 
