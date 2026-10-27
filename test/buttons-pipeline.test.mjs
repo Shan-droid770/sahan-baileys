@@ -186,6 +186,10 @@ describe('carousel message support', () => {
         assert.match(src, /prepareWAMessageMedia\(\{ image: card\.image \}, options\)/);
         assert.match(src, /carouselMessage: proto\.Message\.InteractiveMessage\.CarouselMessage\.fromObject/);
         assert.match(src, /carouselCardType: proto\.Message\.InteractiveMessage\.CarouselMessage\.CarouselCardType\.HSCROLL_CARDS/);
+        assert.match(src, /header: \{ title: '', subtitle: '', hasMediaAttachment: false \}/);
+        const sendSrc = await readFile(new URL('../lib/Socket/messages-send.js', import.meta.url), 'utf8');
+        assert.match(sendSrc, /message\.interactiveMessage\?\.carouselMessage\?\.cards\?\.length/);
+        assert.match(sendSrc, /nativeFlow \|\| message\.buttonsMessage \|\| hasCarousel/);
     });
 });
 
