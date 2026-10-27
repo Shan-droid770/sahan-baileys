@@ -267,6 +267,15 @@ describe('newsletter socket source contracts', () => {
         assert.doesNotMatch(src, /view_role: role \|\| 'GUEST'/)
     })
 
+    test('rotated metadata, subscriber, subscribed and follow ids have bounded fallbacks', () => {
+        assert.match(src, /const mexQueryWithFallback = async/)
+        assert.match(src, /\['9779843322044422'\]/)
+        assert.match(src, /\['9783111038412085'\]/)
+        assert.match(src, /\['8621797084555037'\]/)
+        assert.match(src, /\['24404358912487870'\]/)
+        assert.match(src, /non-JSON response\|query id is probably stale/)
+    })
+
     test('every channel op goes through the shared mex helper', () => {
         assert.doesNotMatch(src, /newsletterWMexQuery/, 'the ad-hoc w:mex helper must not come back')
         assert.match(src, /import \{ executeWMexQuery \} from '\.\/mex\.js'/)
