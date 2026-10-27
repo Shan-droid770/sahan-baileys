@@ -254,6 +254,14 @@ describe('newsletterSubscribed payload', () => {
 describe('newsletter socket source contracts', () => {
     const src = readFileSync(new URL('../lib/Socket/newsletter.js', import.meta.url), 'utf8')
 
+    test('admin-channel picker verifies OWNER/ADMIN through per-channel metadata', () => {
+        assert.match(src, /const fetchAdminChannels = async \(\) =>/)
+        assert.match(src, /metadata = await fetchMetadata\('jid', channel\.id\)/)
+        assert.match(src, /role !== 'OWNER' && role !== 'ADMIN'/)
+        assert.match(src, /newsletterAdminChannels: fetchAdminChannels/)
+        assert.match(src, /newsletterGetInviteInfo: async reference =>/)
+    })
+
     test('view_role is only sent when the caller passes a role', () => {
         assert.match(src, /if \(role\) input\.view_role = role/)
         assert.doesNotMatch(src, /view_role: role \|\| 'GUEST'/)

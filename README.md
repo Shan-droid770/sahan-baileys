@@ -821,6 +821,35 @@ longer keeps a shadow copy (that copy was missing `SUBSCRIBED`, so
 `newsletterSubscribed()` sent `query_id: undefined` and the server answered with a
 binary body — the source of the `"… is not valid JSON"` crashes).
 
+### Carousel messages
+
+Send a horizontal carousel with 2–10 cards. Each card needs an image or video; `buttons` accepts WhatsApp native-flow button objects (`name` + JSON `buttonParamsJson`).
+
+```javascript
+await sock.sendMessage(jid, {
+  text: 'Pick an item',
+  carousel: [
+    {
+      image: { url: './item-one.jpg' },
+      body: 'First item',
+      footer: 'Option one',
+      buttons: [{
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({ display_text: 'Choose', id: 'item-one' })
+      }]
+    },
+    {
+      image: { url: './item-two.jpg' },
+      body: 'Second item',
+      buttons: [{
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({ display_text: 'Choose', id: 'item-two' })
+      }]
+    }
+  ]
+})
+```
+
 ### Reading channels
 
 ```javascript
@@ -836,6 +865,12 @@ console.log(channel.id, channel.name)
 // everything this account follows (parsed; null / deleted entries skipped)
 const channels = await sock.newsletterSubscribed()
 const sameThing = await sock.newsletterFetchAllSubscribe()   // alias other forks use
+
+// posting targets only: each channel's viewer role is verified via metadata
+const postingChannels = await sock.newsletterAdminChannels() // OWNER/ADMIN only; OWNER first
+
+// compatibility alias for invite URL/code lookups
+const inviteInfo = await sock.newsletterGetInviteInfo('https://whatsapp.com/channel/0029VaAbCdEf')
 
 // members (followers) of a channel — normalized records, owner/admins first
 const members = await sock.newsletterSubscribers(channelJid, 50)
