@@ -865,7 +865,8 @@ console.log(channel.id, channel.name)
 
 // everything this account follows (parsed; null / deleted entries skipped)
 const channels = await sock.newsletterSubscribed()
-const sameThing = await sock.newsletterFetchAllSubscribe()   // alias other forks use
+const sameThing = await sock.newsletterFetchAll()            // fetch-all alias
+const alsoSame = await sock.newsletterFetchAllSubscribe()   // compatibility alias
 
 // posting targets only: each channel's viewer role is verified via metadata
 const postingChannels = await sock.newsletterAdminChannels() // OWNER/ADMIN only; OWNER first
@@ -881,6 +882,8 @@ await sock.newsletterUnfollow(channelJid)
 await sock.newsletterMute(channelJid)        // newsletterUnmute() to undo
 await sock.newsletterAdminCount(channelJid)
 ```
+
+The package root also exports function-style wrappers for these helpers; pass the socket first, for example `newsletterAdminChannels(sock)`, `newsletterFetchAll(sock)`, and `newsletterMemberRoles(sock, channelJid, 100)`.
 
 **Guarantees since v1.0.28**
 
