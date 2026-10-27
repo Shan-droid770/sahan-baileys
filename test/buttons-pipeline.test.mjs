@@ -178,6 +178,17 @@ describe('buttons API — one-click action buttons (url / copy / call)', () => {
     })
 })
 
+describe('carousel message support', () => {
+    test('builds interactive carousel cards with uploaded media and card limits', async () => {
+        const src = await readFile(new URL('../lib/Utils/messages.js', import.meta.url), 'utf8');
+        assert.match(src, /if \(Array\.isArray\(message\.carousel\)\)/);
+        assert.match(src, /cards\.length < 2 \|\| cards\.length > 10/);
+        assert.match(src, /prepareWAMessageMedia\(\{ image: card\.image \}, options\)/);
+        assert.match(src, /carouselMessage: proto\.Message\.InteractiveMessage\.CarouselMessage\.fromObject/);
+        assert.match(src, /carouselCardType: proto\.Message\.InteractiveMessage\.CarouselMessage\.CarouselCardType\.HSCROLL_CARDS/);
+    });
+});
+
 describe('location / gif headers', () => {
     test('location header builds the map card (headerType LOCATION) with no uploads', async () => {
         const m = await gen({
