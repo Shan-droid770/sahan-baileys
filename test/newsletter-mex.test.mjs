@@ -13,13 +13,16 @@
  */
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
+import { gzipSync } from 'node:zlib'
 import { readFileSync } from 'node:fs'
 
 import { QueryIds, XWAPaths, resolveQueryId } from '../lib/Types/index.js'
 import { executeWMexQuery } from '../lib/Socket/mex.js'
 import {
     extractNewsletterMetadata,
-    parseNewsletterMetadata
+    filterNewsletterAdminChannels,
+    parseNewsletterMetadata,
+    parseNewsletterSubscriptions
 } from '../lib/Socket/newsletter.js'
 import { prepareChannelContent } from '../lib/Utils/newsletter-media.js'
 import { DEFAULT_CONNECTION_CONFIG } from '../lib/Defaults/index.js'
@@ -90,18 +93,31 @@ describe('w:mex layer', () => {
         assert.deepEqual(result, METADATA_PAYLOAD)
     })
 
-    test('a non-JSON (legacy/binary) body names the stale query id instead of throwing SyntaxError', async () => {
+    test('non-JSON body is diagnosed without exposing its contents or falsely asserting stale ID', async () => {
+        const privateMarker = 'private-channel-name-should-not-leak'
         await assert.rejects(
-            () => run('not json at all'),
+            () => run(privateMarker),
             err => {
                 assert.equal(err.isBoom, true)
                 assert.equal(err.output.statusCode, 400)
                 assert.match(err.message, /non-JSON response/)
-                assert.match(err.message, new RegExp(QueryIds.METADATA))
-                assert.match(err.message, /mexQueryIdOverrides/)
+                assert.match(err.message, /compressed\/legacy response or a stale query id/)
+                assert.doesNotMatch(err.message, new RegExp(privateMarker))
+                assert.equal(err.data.responseBytes, Buffer.byteLength(privateMarker))
+                assert.equal(err.data.preview, undefined)
                 return true
             }
         )
+    })
+
+    test('decodes gzip-compressed w:mex JSON response bodies', async () => {
+        const payload = { data: { xwa2_newsletter: METADATA_PAYLOAD } }
+        const response = await executeWMexQuery(
+            {}, QueryIds.METADATA, XWAPaths.xwa2_newsletter_metadata,
+            async () => ({ tag: 'iq', attrs: {}, content: [{ tag: 'result', attrs: {}, content: gzipSync(Buffer.from(JSON.stringify(payload))) }] }),
+            () => 'MSG-GZIP'
+        )
+        assert.deepEqual(response, METADATA_PAYLOAD)
     })
 
     test('GraphQL error array becomes a Boom with the server error code', async () => {
@@ -109,8 +125,9 @@ describe('w:mex layer', () => {
             () => run({ errors: [{ message: 'Bad Request', extensions: { error_code: 400 } }] }),
             err => {
                 assert.equal(err.isBoom, true)
-                assert.match(err.message, /GraphQL server error: Bad Request/)
+                assert.match(err.message, /GraphQL server error \(code 400\)/)
                 assert.equal(err.output.statusCode, 400)
+                assert.equal(err.data.errorCode, 400)
                 return true
             }
         )
@@ -183,6 +200,36 @@ describe('w:mex layer', () => {
 })
 
 describe('newsletter metadata parsing', () => {
+    test('parses subscribed data arrays, GraphQL edge wrappers, and keeps viewer roles', () => {
+        const direct = parseNewsletterSubscriptions(SUBSCRIBED_PAYLOAD)
+        assert.equal(direct.length, 1)
+        assert.equal(direct[0].viewer_metadata.role, 'ADMIN')
+        const wrapped = parseNewsletterSubscriptions({
+            data: { xwa2_newsletter_subscribed: [{ node: METADATA_PAYLOAD, role: 'OWNER' }] }
+        })
+        assert.equal(wrapped.length, 1)
+        assert.equal(wrapped[0].viewer_metadata.role, 'OWNER')
+        assert.equal(parseNewsletterSubscriptions({ unrelated: [] }).length, 0)
+    })
+
+    test('parses subscribed GraphQL edge wrappers and keeps the viewer role', () => {
+        const parsed = parseNewsletterMetadata({ node: METADATA_PAYLOAD, role: 'OWNER' })
+        assert.equal(parsed?.id, METADATA_PAYLOAD.id)
+        assert.equal(parsed?.name, 'Aysu Bots')
+        assert.equal(parsed?.viewer_metadata?.role, 'OWNER')
+    })
+
+    test('owner/admin filter fails closed and sorts owners before admins', () => {
+        const filtered = filterNewsletterAdminChannels([
+            { id: 'sub', name: 'Subscriber', role: 'SUBSCRIBER' },
+            { id: 'admin', name: 'Admin', viewer_metadata: { role: 'ADMIN' } },
+            { id: 'unknown', name: 'Unknown' },
+            { id: 'owner', name: 'Owner', role: 'OWNER' },
+            { id: 'guest', role: 'GUEST' }
+        ])
+        assert.deepEqual(filtered.map(channel => channel.id), ['owner', 'admin'])
+    })
+
     test('full payload', () => {
         assert.deepEqual(parseNewsletterMetadata(METADATA_PAYLOAD), {
             id: '120363414000000001@newsletter',
@@ -267,13 +314,12 @@ describe('newsletter socket source contracts', () => {
         assert.doesNotMatch(src, /view_role: role \|\| 'GUEST'/)
     })
 
-    test('rotated metadata, subscriber, subscribed and follow ids have bounded fallbacks', () => {
-        assert.match(src, /const mexQueryWithFallback = async/)
+    test('subscription lookup uses the verified single query ID without retries', () => {
+        assert.match(src, /mexQuery\(\{\}, QueryIds\.SUBSCRIBED, XWAPaths\.xwa2_newsletter_subscribed\)/)
+        assert.match(src, /Date\.now\(\) - subscribedRequestAt < 750/)
+        assert.doesNotMatch(src, /QueryIds\.SUBSCRIBED[^\n]*8621797084555037/)
         assert.match(src, /\['9779843322044422'\]/)
-        assert.match(src, /\['9783111038412085'\]/)
-        assert.match(src, /\['8621797084555037'\]/)
-        assert.match(src, /\['24404358912487870'\]/)
-        assert.match(src, /non-JSON response\|query id is probably stale/)
+        assert.match(src, /queryId: '9783111038412085', variables: \{ newsletter_id: jid \}/)
     })
 
     test('every channel op goes through the shared mex helper', () => {

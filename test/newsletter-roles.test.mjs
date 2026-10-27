@@ -188,11 +188,11 @@ describe('subscriber wire contract', () => {
         assert.equal(parseNewsletterSubscribers(result).length, 6)
     })
 
-    test('newsletter.js keeps no local id table and uses the shared SUBSCRIBERS id', () => {
+    test('newsletter.js keeps IDs centralized and retries the verified Baileys subscriber ID only on stale response', () => {
         const src = readFileSync(new URL('../lib/Socket/newsletter.js', import.meta.url), 'utf8')
         assert.match(src, /QueryIds\.SUBSCRIBERS/)
-        assert.doesNotMatch(src, /9783111038412085/, 'the stale SUBSCRIBERS id must not return')
-        assert.doesNotMatch(src, /query_id:\s*['"]\d/, 'no hardcoded query ids in the socket layer')
+        assert.match(src, /queryId: '9783111038412085', variables: \{ newsletter_id: jid \}/)
+        assert.doesNotMatch(src, /query_id:\s*['"]\d/, 'query IDs are passed through the shared w:mex helper')
     })
 })
 
