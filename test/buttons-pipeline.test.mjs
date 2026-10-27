@@ -179,17 +179,38 @@ describe('buttons API — one-click action buttons (url / copy / call)', () => {
 })
 
 describe('carousel message support', () => {
-    test('builds interactive carousel cards with uploaded media and card limits', async () => {
-        const src = await readFile(new URL('../lib/Utils/messages.js', import.meta.url), 'utf8');
-        assert.match(src, /if \(Array\.isArray\(message\.carousel\)\)/);
-        assert.match(src, /cards\.length < 2 \|\| cards\.length > 10/);
-        assert.match(src, /prepareWAMessageMedia\(\{ image: card\.image \}, options\)/);
-        assert.match(src, /carouselMessage: proto\.Message\.InteractiveMessage\.CarouselMessage\.fromObject/);
-        assert.match(src, /carouselCardType: proto\.Message\.InteractiveMessage\.CarouselMessage\.CarouselCardType\.HSCROLL_CARDS/);
-        assert.match(src, /header: \{ title: '', subtitle: '', hasMediaAttachment: false \}/);
-        const sendSrc = await readFile(new URL('../lib/Socket/messages-send.js', import.meta.url), 'utf8');
-        assert.match(sendSrc, /message\.interactiveMessage\?\.carouselMessage\?\.cards\?\.length/);
-        assert.match(sendSrc, /nativeFlow \|\| message\.buttonsMessage \|\| hasCarousel/);
+    test('sendMessage({ cards }) creates a WhatsApp interactive carousel with media and native-flow buttons', async () => {
+        const TINY = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+        const m = await gen({
+            text: 'Pick an item',
+            carouselCardType: 'horizontal',
+            cards: [
+                { image: TINY, title: 'First', body: { text: 'First card' }, buttons: [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Choose', id: 'first' }) }] },
+                { image: TINY, title: 'Second', caption: 'Second card', nativeFlow: [{ text: 'Open source', url: 'https://example.com', useWebview: true }] }
+            ]
+        }, await okOptions());
+
+        const interactive = m.interactiveMessage;
+        assert.ok(interactive?.carouselMessage, 'interactive carousel expected');
+        assert.equal(interactive.body.text, 'Pick an item');
+        assert.equal(interactive.carouselMessage.cards.length, 2);
+        assert.equal(interactive.carouselMessage.messageVersion, 1);
+        assert.equal(interactive.carouselMessage.carouselCardType, 1);
+        assert.ok(interactive.carouselMessage.cards[0].header.imageMessage, 'card image must survive alongside body text');
+        assert.equal(interactive.carouselMessage.cards[0].header.hasMediaAttachment, true);
+        assert.equal(interactive.carouselMessage.cards[0].body.text, 'First card');
+        assert.equal(interactive.carouselMessage.cards[0].nativeFlowMessage.buttons[0].name, 'quick_reply');
+        const urlButton = interactive.carouselMessage.cards[1].nativeFlowMessage.buttons[0];
+        assert.equal(urlButton.name, 'cta_url');
+        assert.deepEqual(JSON.parse(urlButton.buttonParamsJson), {
+            display_text: 'Open source', url: 'https://example.com', merchant_url: 'https://example.com', webview_interaction: true
+        });
+        assert.equal(interactive.header, undefined, 'carousel follows the working protocol shape without a synthetic parent header');
+    });
+
+    test('carousel validates card count', async () => {
+        const options = await okOptions();
+        await assert.rejects(() => gen({ cards: [{ text: 'only one' }] }, options), /between 2 and 10 cards/);
     });
 });
 
@@ -207,8 +228,8 @@ describe('location / gif headers', () => {
         assert.ok(Math.abs(bm.locationMessage.degreesLongitude - 76.2673) < 1e-6)
     })
 
-    test('ordinary gif media is normalized to looping VideoMessage payload (source contract)', async () => {
-        const src = await readFile(new URL('../lib/Utils/messages.js', import.meta.url), 'utf8');
+    test('ordinary gif media is normalized to looping VideoMessage payload (source contract)', () => {
+        const src = readFileSync(new URL('../lib/Utils/messages.js', import.meta.url), 'utf8');
         assert.match(src, /const isGif = Object\.prototype\.hasOwnProperty\.call\(message, 'gif'\)/);
         assert.match(src, /message = \{ \.\.\.message, video: message\.gif, gifPlayback: true \}/);
     });

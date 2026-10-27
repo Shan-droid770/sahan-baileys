@@ -823,16 +823,17 @@ binary body — the source of the `"… is not valid JSON"` crashes).
 
 ### Carousel messages
 
-Send a horizontal carousel with 2–10 cards. Each card needs an image or video; `buttons` accepts WhatsApp native-flow button objects (`name` + JSON `buttonParamsJson`).
+Send a horizontal carousel with 2–10 cards using the `cards` property (the `carousel` alias is also accepted). Each card can include image/video media, title, body/caption, footer, and native-flow buttons. Body text at message level is optional. `sock.sendCarousel(jid, cards, options)` is also available as a convenience wrapper around `sendMessage`.
 
 ```javascript
 await sock.sendMessage(jid, {
   text: 'Pick an item',
-  carousel: [
+  carouselCardType: 'horizontal',
+  cards: [
     {
       image: { url: './item-one.jpg' },
-      body: 'First item',
-      footer: 'Option one',
+      title: 'First item',
+      body: { text: 'First item description' },
       buttons: [{
         name: 'quick_reply',
         buttonParamsJson: JSON.stringify({ display_text: 'Choose', id: 'item-one' })
@@ -840,7 +841,7 @@ await sock.sendMessage(jid, {
     },
     {
       image: { url: './item-two.jpg' },
-      body: 'Second item',
+      caption: 'Second item description',
       buttons: [{
         name: 'quick_reply',
         buttonParamsJson: JSON.stringify({ display_text: 'Choose', id: 'item-two' })
