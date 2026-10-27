@@ -375,6 +375,8 @@ describe('newsletter socket source contracts', () => {
         assert.match(src, /newsletterAdminChannels: fetchAdminChannels/)
         assert.match(src, /newsletterFetchAll: fetchSubscribed/)
         assert.match(src, /newsletterFetchAllSubscribe: fetchSubscribed/)
+        assert.match(src, /newsletterFetchMessages: async \(type, key, count, after, before\)/)
+        assert.match(src, /messageAttrs\.before = before\.toString\(\)/)
         assert.match(src, /newsletterGetInviteInfo: async reference =>/)
     })
 
