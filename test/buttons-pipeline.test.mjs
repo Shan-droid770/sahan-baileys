@@ -30,10 +30,10 @@ const failOptions = async () => ({
     upload: async () => { throw new Error('network down') }
 })
 
-let gen, proto
+let gen, wrapInteractiveMessageForSending, proto
 
 before(async () => {
-    ;({ generateWAMessageContent: gen } = await import('../lib/Utils/messages.js'))
+    ;({ generateWAMessageContent: gen, wrapInteractiveMessageForSending } = await import('../lib/Utils/messages.js'))
     ;({ proto } = await import('../WAProto/index.js'))
 })
 
@@ -217,6 +217,13 @@ describe('carousel message support', () => {
             interactive.carouselMessage.cards[0].header.imageMessage.mediaKey
         );
         assert.equal(decoded.interactiveMessage.carouselMessage.cards[1].nativeFlowMessage.buttons[0].name, 'cta_url');
+
+        const relayed = wrapInteractiveMessageForSending(m);
+        assert.equal(relayed.viewOnceMessage.message.interactiveMessage.carouselMessage.cards.length, 2);
+        assert.equal(proto.Message.verify(relayed), null);
+        assert.equal(wrapInteractiveMessageForSending(relayed), relayed, 'already wrapped input is not nested twice');
+        const relaySource = readFileSync(new URL('../lib/Socket/messages-send.js', import.meta.url), 'utf8');
+        assert.match(relaySource, /if \(!isNewsletter\) message = Utils_1\.wrapInteractiveMessageForSending\(message\)/);
     });
 
     test('carousel rejects invalid counts, card values, and empty cards', async () => {

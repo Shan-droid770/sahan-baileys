@@ -355,11 +355,17 @@ describe('channel media compatibility (B1–B3)', () => {
         assert.equal(content.imageMessage.jpegThumbnail, null)
     })
 
-    test('gifPlayback is dropped (GIF-flagged video is rejected)', () => {
+    test('gifPlayback is preserved for channel posts by default; legacy stripping is opt-in', () => {
         const content = { videoMessage: { gifPlayback: true, jpegThumbnail: Buffer.from([1]) } }
         prepareChannelContent(content, '120363@newsletter', { logger })
-        assert.equal(content.videoMessage.gifPlayback, false)
+        assert.equal(content.videoMessage.gifPlayback, true)
         assert.equal(content.videoMessage.jpegThumbnail, null)
+
+        const compatibilityFallback = { videoMessage: { gifPlayback: true } }
+        prepareChannelContent(compatibilityFallback, '120363@newsletter', {
+            compat: { dropGifPlayback: true }, logger
+        })
+        assert.equal(compatibilityFallback.videoMessage.gifPlayback, false)
     })
 
     test('wrapped messages (viewOnce) are adapted in place', () => {

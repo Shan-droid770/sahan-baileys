@@ -965,7 +965,7 @@ channel service rejects several shapes that are fine for users/groups:
 |---|---|---|---|
 | `ptt: true` voice note | ✅ | ❌ rejected/hidden | **auto-converted** to channel audio: `ptt:false`, `audio/ogg; codecs=opus`, `fileName: audio.ogg`, `seconds` |
 | image/video with `jpegThumbnail` | ✅ needs it | ❌ refused | thumbnail **stripped** at send time |
-| video with `gifPlayback: true` | ✅ | ❌ "Bad Request" | flag **dropped** → sent as a normal video (logged) |
+| video with `gifPlayback: true` | ✅ | ✅ (MP4-backed looping video) | flag **preserved** by default; set `newsletterMediaCompat: { dropGifPlayback: true }` only as a compatibility fallback |
 | text / image / video / document / sticker | ✅ | ✅ | untouched |
 
 The conversion is logged (`channel target: …`). Disable it entirely, or per flag:
