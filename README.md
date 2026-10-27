@@ -865,7 +865,8 @@ console.log(channel.id, channel.name)
 
 // everything this account follows (parsed; null / deleted entries skipped)
 const channels = await sock.newsletterSubscribed()
-const sameThing = await sock.newsletterFetchAllSubscribe()   // alias other forks use
+const sameThing = await sock.newsletterFetchAll()            // fetch-all alias
+const alsoSame = await sock.newsletterFetchAllSubscribe()   // compatibility alias
 
 // posting targets only: each channel's viewer role is verified via metadata
 const postingChannels = await sock.newsletterAdminChannels() // OWNER/ADMIN only; OWNER first
@@ -881,6 +882,8 @@ await sock.newsletterUnfollow(channelJid)
 await sock.newsletterMute(channelJid)        // newsletterUnmute() to undo
 await sock.newsletterAdminCount(channelJid)
 ```
+
+The package root also exports function-style wrappers for these helpers; pass the socket first, for example `newsletterAdminChannels(sock)`, `newsletterFetchAll(sock)`, and `newsletterMemberRoles(sock, channelJid, 100)`.
 
 **Guarantees since v1.0.28**
 
@@ -965,7 +968,7 @@ channel service rejects several shapes that are fine for users/groups:
 |---|---|---|---|
 | `ptt: true` voice note | ✅ | ❌ rejected/hidden | **auto-converted** to channel audio: `ptt:false`, `audio/ogg; codecs=opus`, `fileName: audio.ogg`, `seconds` |
 | image/video with `jpegThumbnail` | ✅ needs it | ❌ refused | thumbnail **stripped** at send time |
-| video with `gifPlayback: true` | ✅ | ❌ "Bad Request" | flag **dropped** → sent as a normal video (logged) |
+| video with `gifPlayback: true` | ✅ | ✅ (MP4-backed looping video) | flag **preserved** by default; set `newsletterMediaCompat: { dropGifPlayback: true }` only as a compatibility fallback |
 | text / image / video / document / sticker | ✅ | ✅ | untouched |
 
 The conversion is logged (`channel target: …`). Disable it entirely, or per flag:

@@ -21,6 +21,7 @@ import { executeWMexQuery } from '../lib/Socket/mex.js'
 import {
     extractNewsletterMetadata,
     filterNewsletterAdminChannels,
+    resolveNewsletterAdminChannels,
     parseNewsletterMetadata,
     parseNewsletterSubscriptions
 } from '../lib/Socket/newsletter.js'
@@ -298,14 +299,57 @@ describe('newsletterSubscribed payload', () => {
     })
 })
 
+describe('strict subscribed-channel admin resolution', () => {
+    test('uses roles already present and avoids redundant metadata/subscriber queries', async () => {
+        const calls = []
+        const result = await resolveNewsletterAdminChannels([
+            { id: 'a@newsletter', viewer_metadata: { role: 'ADMIN' } },
+            { id: 'b@newsletter', viewer_metadata: { role: 'SUBSCRIBER' } },
+            { id: 'c@newsletter' },
+            { id: 'd@newsletter', viewer_metadata: { role: 'UNRECOGNIZED' } }
+        ], {
+            ownIds: ['self@lid'],
+            fetchMetadata: async jid => {
+                calls.push(['metadata', jid])
+                return { id: jid, name: jid, viewer_metadata: { role: 'OWNER' } }
+            },
+            fetchSubscribers: async jid => {
+                calls.push(['subscribers', jid])
+                return []
+            }
+        })
+
+        assert.deepEqual(result.map(channel => channel.id), ['c@newsletter', 'a@newsletter'])
+        assert.deepEqual(calls, [['metadata', 'c@newsletter']])
+    })
+
+    test('falls back to a matching own member role only when viewer role is absent', async () => {
+        const calls = []
+        const result = await resolveNewsletterAdminChannels([{ id: 'missing-role@newsletter' }], {
+            ownIds: ['self@lid'],
+            fetchMetadata: async jid => ({ id: jid }),
+            fetchSubscribers: async (jid, count) => {
+                calls.push([jid, count])
+                return [{ id: 'self@lid', tier: 'ADMIN' }]
+            }
+        })
+        assert.equal(result[0].role, 'ADMIN')
+        assert.deepEqual(calls, [['missing-role@newsletter', 100]])
+    })
+})
+
 describe('newsletter socket source contracts', () => {
     const src = readFileSync(new URL('../lib/Socket/newsletter.js', import.meta.url), 'utf8')
 
-    test('admin-channel picker verifies OWNER/ADMIN through per-channel metadata', () => {
+    test('admin-channel picker verifies roles and reuses subscribed viewer_metadata', () => {
         assert.match(src, /const fetchAdminChannels = async \(\) =>/)
-        assert.match(src, /metadata = await fetchMetadata\('jid', channel\.id\)/)
-        assert.match(src, /role !== 'OWNER' && role !== 'ADMIN'/)
+        assert.match(src, /resolveNewsletterAdminChannels\(channels, \{/)
+        assert.match(src, /fetchMetadata: jid => fetchMetadata\('jid', jid\)/)
+        assert.match(src, /if \(!role && typeof fetchMetadata === 'function'\)/)
+        assert.match(src, /if \(role \|\| !ownIds\.length \|\| typeof fetchSubscribers !== 'function'\) continue/)
         assert.match(src, /newsletterAdminChannels: fetchAdminChannels/)
+        assert.match(src, /newsletterFetchAll: fetchSubscribed/)
+        assert.match(src, /newsletterFetchAllSubscribe: fetchSubscribed/)
         assert.match(src, /newsletterGetInviteInfo: async reference =>/)
     })
 
@@ -355,11 +399,17 @@ describe('channel media compatibility (B1–B3)', () => {
         assert.equal(content.imageMessage.jpegThumbnail, null)
     })
 
-    test('gifPlayback is dropped (GIF-flagged video is rejected)', () => {
+    test('gifPlayback is preserved for channel posts by default; legacy stripping is opt-in', () => {
         const content = { videoMessage: { gifPlayback: true, jpegThumbnail: Buffer.from([1]) } }
         prepareChannelContent(content, '120363@newsletter', { logger })
-        assert.equal(content.videoMessage.gifPlayback, false)
+        assert.equal(content.videoMessage.gifPlayback, true)
         assert.equal(content.videoMessage.jpegThumbnail, null)
+
+        const compatibilityFallback = { videoMessage: { gifPlayback: true } }
+        prepareChannelContent(compatibilityFallback, '120363@newsletter', {
+            compat: { dropGifPlayback: true }, logger
+        })
+        assert.equal(compatibilityFallback.videoMessage.gifPlayback, false)
     })
 
     test('wrapped messages (viewOnce) are adapted in place', () => {
