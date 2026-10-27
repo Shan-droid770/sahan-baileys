@@ -13,11 +13,12 @@
  */
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { gzipSync } from 'node:zlib'
+import { deflateRawSync, gzipSync } from 'node:zlib'
 import { readFileSync } from 'node:fs'
 
 import { QueryIds, XWAPaths, resolveQueryId } from '../lib/Types/index.js'
-import { executeWMexQuery } from '../lib/Socket/mex.js'
+import { decodeWMexResponse, executeWMexQuery } from '../lib/Socket/mex.js'
+import { createShortLivedRequestCache } from '../lib/Socket/newsletter.js'
 import {
     extractNewsletterMetadata,
     filterNewsletterAdminChannels,
@@ -79,6 +80,30 @@ const run = (payload, dataPath = XWAPaths.xwa2_newsletter_metadata, queryId = Qu
     executeWMexQuery({}, queryId, dataPath, okQuery(payload), () => 'MSG-1', overrides)
 
 describe('w:mex layer', () => {
+    test('decodes raw-DEFLATE JSON bodies with a bounded output buffer', () => {
+        const payload = { data: { result: 'ok' } }
+        const decoded = decodeWMexResponse(deflateRawSync(Buffer.from(JSON.stringify(payload))), '123')
+        assert.deepEqual(decoded.data, payload)
+        assert.equal(decoded.format, 'deflate-raw')
+    })
+
+    test('short-lived request cache coalesces callers and caches a failure cooldown', async () => {
+        let calls = 0
+        let now = 100
+        const cache = createShortLivedRequestCache(async () => {
+            calls++
+            await new Promise(resolve => setImmediate(resolve))
+            throw new Error('rate-overlimit')
+        }, { errorTtlMs: 15000, now: () => now })
+        const coalesced = await Promise.allSettled([cache(), cache()])
+        assert.equal(coalesced.filter(result => result.status === 'rejected').length, 2)
+        await assert.rejects(cache(), /rate-overlimit/)
+        assert.equal(calls, 1)
+        now += 15001
+        await assert.rejects(cache(), /rate-overlimit/)
+        assert.equal(calls, 2)
+    })
+
     test('single source of truth: Socket/newsletter.js has no local query-id table', () => {
         const src = readFileSync(new URL('../lib/Socket/newsletter.js', import.meta.url), 'utf8')
         assert.doesNotMatch(src, /const\s+QueryIds\s*=\s*\{/, 'a local QueryIds table shadows Types/Mex.js')
@@ -102,7 +127,7 @@ describe('w:mex layer', () => {
                 assert.equal(err.isBoom, true)
                 assert.equal(err.output.statusCode, 400)
                 assert.match(err.message, /non-JSON response/)
-                assert.match(err.message, /compressed\/legacy response or a stale query id/)
+                assert.match(err.message, /compressed, legacy, binary, or upstream throttling response/)
                 assert.doesNotMatch(err.message, new RegExp(privateMarker))
                 assert.equal(err.data.responseBytes, Buffer.byteLength(privateMarker))
                 assert.equal(err.data.preview, undefined)
@@ -360,7 +385,9 @@ describe('newsletter socket source contracts', () => {
 
     test('subscription lookup uses the verified single query ID without retries', () => {
         assert.match(src, /mexQuery\(\{\}, QueryIds\.SUBSCRIBED, XWAPaths\.xwa2_newsletter_subscribed\)/)
-        assert.match(src, /Date\.now\(\) - subscribedRequestAt < 750/)
+        assert.match(src, /successTtlMs: 5_000, errorTtlMs: 15_000/)
+        assert.match(src, /fetchSubscribed\.clear\(\)/)
+        assert.match(src, /inFlight\) return inFlight/)
         assert.doesNotMatch(src, /QueryIds\.SUBSCRIBED[^\n]*8621797084555037/)
         assert.match(src, /\['9779843322044422'\]/)
         assert.match(src, /queryId: '9783111038412085', variables: \{ newsletter_id: jid \}/)
